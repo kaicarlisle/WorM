@@ -188,11 +188,79 @@ void remove_window(Window w, unsigned int dr, unsigned int transient_window) {
 }
 
 void rotate_win_hor(const Arg arg) {
+    // TODO: move onto next workspace when you go off the edge
+    switch(numwins) {
+        case 1:
+            return;
+        case 2:
+            // if current=window 1 and right pressed, current = window 2 (= current->next)
+            // else if current = window 2 and left pressed, current = window 1 (= head)
+            if(arg.i == 1 && current == head) {
+                current = current->next;
+            } else if(arg.i == -1 && current == head->next) {
+                current = head;
+            }
+            break;
+        case 3:
+            // if current=window 1 and right pressed, current = window 2 (= current->next)
+            // else if current = window 2 or 3 and left pressed, current = window 1 (= head)
+            if(arg.i == 1 && current == head) {
+                current = current->next;
+            } else if(arg.i == -1 && (current == head->next || current == head->next->next)) {
+                current = head;
+            }
+            break;
+        case 4:
+            // if current=window 1 and right pressed, current = window 2 (= current->next)
+            // else if current = window 2 and left pressed, current = window 1 (= head)
+            // else if current = window 3 and left pressed, current = window 4 (current->next)
+            // else if current = window 4 and right pressed, current = window 3 (current->prev)
+            if(arg.i == 1 && current == head) {
+                current = current->next;
+            } else if(arg.i == -1 && current == head->next) {
+                current = head;
+            } else if(arg.i == 1 && current == head->next->next->next) {
+                current = current->prev;
+            } else if(arg.i == -1 && current == head->next->next) {
+                current = current->next;
+            }
+            break;
+    }
     tile();
     update_current();
 }
 
 void rotate_win_ver(const Arg arg) {
+    switch(numwins) {
+        case 1:
+            return;
+        case 2:
+            return;
+        case 3:
+            // if current=window 3 and up pressed, current = window 2 (= current->prev)
+            // else if current = window 2 and down pressed, current = window 3 (= current->next)
+            if(arg.i == -1 && current == head->next->next) {
+                current = current->prev;
+            } else if(arg.i == 1 && current == head->next) {
+                current = current->next;
+            }
+            break;
+        case 4:
+            // if current=window 3 and up pressed, current = window 2 (= current->prev)
+            // else if current = window 2 and down pressed, current = window 3 (= current->next)
+            // else if current=window 1 and down pressed, current = window 4
+            // else if current=window 4 and up pressed, current = window 1
+            if(arg.i == -1 && current == head->next->next) {
+                current = current->prev;
+            } else if(arg.i == 1 && current == head->next) {
+                current = current->next;
+            } else if(arg.i == -1 && current == head->next->next->next) {
+                current = head;
+            } else if(arg.i == 1 && current == head) {
+                current = head->next->next->next;
+            }
+            break;
+    }
     tile();
     update_current();
 
@@ -278,7 +346,7 @@ void last_desktop() {
 }
 
 void rotate_desktop(const Arg arg) {
-    Arg a = {.i = (current_desktop + arg.i) % DESKTOPS};
+    Arg a = {.i = (current_desktop + DESKTOPS + arg.i) % DESKTOPS};
     change_desktop(a);
 }
 
@@ -338,7 +406,7 @@ void tile() {
                     screen_width-splitx-double_border_width, splity-double_border_width);
                 c = c->next;
                 XMoveResizeWindow(display, c->win, 
-                    splitx+border_width, splity+border_width, 
+                    splitx+border_width, splity+border_width+ypos, 
                     screen_width-splitx-double_border_width, screen_height-double_border_width);
                 break;
             case 4:
@@ -724,7 +792,7 @@ void setup() {
     grabkeys();
 
     // Set up all desktop
-    for(i=0;i<ARRAYLENGTH(desktops);++i) {
+    for(i=0;i<DESKTOPS;++i) {
         desktops[i].numwins = 0;
         desktops[i].showbar = showbar;
         desktops[i].splitx = screen_width / 2;
