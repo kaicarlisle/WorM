@@ -185,13 +185,26 @@ void remove_window(Window w, unsigned int dr, unsigned int transient_window) {
         tile();
         update_current();
     }
+
+    if(numwins == 0) {
+        last_desktop();
+    }
 }
 
 void rotate_win_hor(const Arg arg) {
-    // TODO: move onto next workspace when you go off the edge
+    Arg next_desktop = {.i = (current_desktop + DESKTOPS + 1) % DESKTOPS};
+    Arg prev_desktop = {.i = (current_desktop + DESKTOPS - 1) % DESKTOPS};
+
     switch(numwins) {
         case 1:
-            return;
+            // if right pressed and next desktop has >=1 window, rotate desktop
+            // if left pressed and prev desktop has >= window, rotate desktop -1
+            if(arg.i == 1 && desktops[next_desktop.i].numwins >= 1) {
+                change_desktop(next_desktop);
+            } else if(arg.i == -1 && desktops[prev_desktop.i].numwins >= 1) {
+                change_desktop(prev_desktop);
+            }
+            break;
         case 2:
             // if current=window 1 and right pressed, current = window 2 (= current->next)
             // else if current = window 2 and left pressed, current = window 1 (= head)
@@ -199,6 +212,14 @@ void rotate_win_hor(const Arg arg) {
                 current = current->next;
             } else if(arg.i == -1 && current == head->next) {
                 current = head;
+            }
+
+            // if current=window 1 and left pressed and prev desktop has >= window, rotate desktop -1
+            // if current=window 2 and right pressed and next desktop has >=1 window, rotate desktop
+            else if(arg.i == 1 && current == head->next && desktops[next_desktop.i].numwins >= 1) {
+                change_desktop(next_desktop);
+            } else if(arg.i == -1 && current == head && desktops[prev_desktop.i].numwins >= 1) {
+                change_desktop(prev_desktop);
             }
             break;
         case 3:
@@ -208,6 +229,14 @@ void rotate_win_hor(const Arg arg) {
                 current = current->next;
             } else if(arg.i == -1 && (current == head->next || current == head->next->next)) {
                 current = head;
+            }
+
+            // if current=window 1 and left pressed and prev desktop has >= window, rotate desktop -1
+            // if current=window 2 or 3 and right pressed and next desktop has >=1 window, rotate desktop
+            else if(arg.i == 1 && (current == head->next || current == head->next->next) && desktops[next_desktop.i].numwins >= 1) {
+                change_desktop(next_desktop);
+            } else if(arg.i == -1 && current == head && desktops[prev_desktop.i].numwins >= 1) {
+                change_desktop(prev_desktop);
             }
             break;
         case 4:
@@ -223,6 +252,14 @@ void rotate_win_hor(const Arg arg) {
                 current = current->prev;
             } else if(arg.i == -1 && current == head->next->next) {
                 current = current->next;
+            }
+
+            // if current=window 1 or 4 and left pressed and prev desktop has >= window, rotate desktop -1
+            // if current=window 2 or 3 and right pressed and next desktop has >=1 window, rotate desktop
+            else if(arg.i == 1 && (current == head->next || current == head->next->next) && desktops[next_desktop.i].numwins >= 1) {
+                change_desktop(next_desktop);
+            } else if(arg.i == -1 && (current == head || current == head->next->next->next) && desktops[prev_desktop.i].numwins >= 1) {
+                change_desktop(prev_desktop);
             }
             break;
     }
@@ -795,6 +832,7 @@ void setup() {
     }
 
     // Select first desktop by default
+    previous_desktop = 0;
     load_desktop(0);
     wm_delete_window = XInternAtom(display, "WM_DELETE_WINDOW", False);
     protos = XInternAtom(display, "WM_PROTOCOLS", False);

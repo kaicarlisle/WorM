@@ -9,7 +9,7 @@
 #define OUTPUT_INFO     0  /* 0=Don't 1=Output info (for bipolarbar) */
 #define PANEL_HEIGHT    30
 #define SHOW_PANEL      0  /* 0=Don't 1=Have the panel shown at startup */
-#define BORDER_WIDTH    10
+#define BORDER_WIDTH    3
 #define SPLIT_LIMIT     250 /* minimum distance from the edge the split point can be */
 
 /* Colors */

@@ -6,18 +6,17 @@
 #define DESKTOPS        10  /* Must edit DESKTOPCHANGE keys to suit */
 #define MOD1            Mod4Mask  /* windows key */
 #define MOD4            Mod1Mask  /* alt key */
-#define OUTPUT_INFO     0 /* 1=Don't 0=Output info for bipolarbar */
-#define TOP_PANEL       0  /* 1=Don't 0=Have the panel at the top instead of the bottom */
-#define PANEL_HEIGHT    30 /* 0 for no space for a panel */
-#define SHOW_BAR        0  /* 1=Don't 0=Have the bar shown with a window open */
-#define BORDER_WIDTH    2
-#define SPLIT_LIMIT     100 /* minimum distance from the edge the split point can be */
+#define OUTPUT_INFO     0  /* 0=Don't 1=Output info (for bipolarbar) */
+#define PANEL_HEIGHT    30
+#define SHOW_PANEL      0  /* 0=Don't 1=Have the panel shown at startup */
+#define BORDER_WIDTH    3
+#define SPLIT_LIMIT     250 /* minimum distance from the edge the split point can be */
 
 /* Colors */
 #define FOCUS           "#664422" // dkorange
 #define UNFOCUS         "#004050" // blueish
 
-const char* dmenucmd[]         = {"dmenu_run","-i","-nb","#666622","-nf","white",NULL};
+const char* dmenucmd[]         = {"dmenu_run","-i","-nb","#664422","-nf","white",NULL};
 const char* terminalcmd[]      = {"alacritty",NULL};
 
 #define DESKTOPCHANGE(K,N) \
