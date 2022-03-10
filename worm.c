@@ -50,7 +50,7 @@ static Display *display;
 static unsigned int bool_quit, current_desktop, previous_desktop, doresize;
 static int screen_height, screen_width;
 static unsigned int panel_size, screen, border_width, win_focus_colour, win_unfocus_colour;
-static unsigned int numwins, showbar, splitx, splity, fullscreen;
+static unsigned int numwins, showpanel, splitx, splity, fullscreen;
 static int xerror(Display *dis, XErrorEvent *ee), (*xerrorxlib)(Display *, XErrorEvent *);
 unsigned int numlockmask;		/* dynamic key lock mask */
 static Window root;
@@ -128,7 +128,7 @@ void add_transient_window(Window w) {
     XMoveWindow(display, w, screen_width/2-(attr.width/2), screen_height/2-(attr.height/2)+panel_size);
     XGetWindowAttributes(display, w, &attr);
     c->x = attr.x;
-    if(TOP_PANEL == 0 && attr.y < panel_size) c->y = panel_size;
+    if(attr.y < panel_size) c->y = panel_size;
     else c->y = attr.y;
     c->width = attr.width;
     c->height = attr.height;
@@ -268,6 +268,12 @@ void rotate_win_ver(const Arg arg) {
 
 void toggle_fullscreen() {
     fullscreen = !fullscreen;
+    if(fullscreen) {
+        border_width = 0;
+    } else {
+        border_width = BORDER_WIDTH;
+    }
+    update_current();
     save_desktop(current_desktop);
     tile();
 }
@@ -291,9 +297,13 @@ void center_split() {
     save_desktop(current_desktop);
 }
 
+// void move_swap_hor(const Arg arg){}
+
+// void move_swap_ver(const Arg arg) {}
+
 /* **************************** Desktop Management ************************************* */
 void update_info() {
-    if(OUTPUT_INFO != 0) return;
+    if(!OUTPUT_INFO) return;
     unsigned int i, j;
 
     fflush(stdout);
@@ -315,7 +325,6 @@ void change_desktop(const Arg arg) {
     // Take "properties" from the new desktop
     load_desktop(arg.i);
 
-    if((panel_size > 0 && showbar == 1) || (panel_size < 1 && showbar == 0)) toggle_panel();
     // Map all windows
     if(head != NULL) {
         for(c=head;c;c=c->next)
@@ -352,7 +361,7 @@ void rotate_desktop(const Arg arg) {
 
 void save_desktop(unsigned int i) {
     desktops[i].numwins = numwins;
-    desktops[i].showbar = showbar;
+    desktops[i].showbar = showpanel;
     desktops[i].splitx = splitx;
     desktops[i].splity = splity;
     desktops[i].fullscreen = fullscreen;
@@ -363,7 +372,7 @@ void save_desktop(unsigned int i) {
 
 void load_desktop(unsigned int i) {
     numwins = desktops[i].numwins;
-    showbar = desktops[i].showbar;
+    showpanel = desktops[i].showbar;
     splitx = desktops[i].splitx;
     splity = desktops[i].splity;
     fullscreen = desktops[i].fullscreen;
@@ -376,55 +385,53 @@ void load_desktop(unsigned int i) {
 void tile() {
     if(head == NULL) return;
     client *c = NULL;
-    unsigned int ypos;
-    unsigned int double_border_width = 2 * border_width;
+    unsigned int ypos = showpanel * panel_size;
 
-    if(TOP_PANEL == 0) ypos = panel_size;
-    if(fullscreen == 0) {
+    if(!fullscreen) {
         switch(numwins) {
             case 1:
                 XMoveResizeWindow(display, head->win, 
-                    0+border_width, ypos+border_width, 
-                    screen_width-double_border_width, screen_height-double_border_width);
+                    0, ypos, 
+                    screen_width-border_width, screen_height-ypos-border_width);
                 break;
             case 2:
                 XMoveResizeWindow(display, head->win, 
-                    0+border_width, ypos+border_width, 
-                    splitx-double_border_width, screen_height-double_border_width);
+                    0, ypos, 
+                    splitx-border_width, screen_height-ypos-border_width);
                 c = head->next;
                 XMoveResizeWindow(display, c->win, 
-                    splitx+border_width, ypos+border_width, 
-                    screen_width-splitx-double_border_width, screen_height-double_border_width);
+                    splitx, ypos, 
+                    screen_width-splitx-border_width, screen_height-ypos-border_width);
                 break;
             case 3:
                 XMoveResizeWindow(display, head->win, 
-                    0+border_width, ypos+border_width, 
-                    splitx-double_border_width, screen_height-double_border_width);
+                    0, ypos, 
+                    splitx-border_width, screen_height-ypos-border_width);
                 c = head->next;
                 XMoveResizeWindow(display, c->win, 
-                    splitx+border_width, ypos+border_width, 
-                    screen_width-splitx-double_border_width, splity-double_border_width);
+                    splitx, ypos, 
+                    screen_width-splitx-border_width, splity-border_width);
                 c = c->next;
                 XMoveResizeWindow(display, c->win, 
-                    splitx+border_width, splity+border_width+ypos, 
-                    screen_width-splitx-double_border_width, screen_height-double_border_width);
+                    splitx, splity+ypos, 
+                    screen_width-splitx-border_width, screen_height-splity-ypos-border_width);
                 break;
             case 4:
                 XMoveResizeWindow(display, head->win, 
-                    0+border_width, ypos+border_width, 
-                    splitx-double_border_width, splity-double_border_width);
+                    0, ypos, 
+                    splitx-border_width, splity-border_width);
                 c = head->next;
                 XMoveResizeWindow(display, c->win, 
-                    splitx+border_width, ypos+border_width, 
-                    screen_width-splitx-double_border_width, splity-double_border_width);
+                    splitx, ypos, 
+                    screen_width-splitx-border_width, splity-border_width);
                 c = c->next;
                 XMoveResizeWindow(display, c->win, 
-                    splitx+border_width, splity+border_width+ypos, 
-                    screen_width-splitx-double_border_width, screen_height-double_border_width);
+                    splitx, splity+ypos, 
+                    screen_width-splitx-border_width, screen_height-splity-ypos-border_width);
                 c = c->next;
                 XMoveResizeWindow(display, c->win, 
-                    0+border_width, splity+border_width+ypos, 
-                    splitx-double_border_width, screen_height-double_border_width);
+                    0, splity+ypos, 
+                    splitx-border_width, screen_height-splity-ypos-border_width);
                 break;
         }
     
@@ -435,21 +442,20 @@ void tile() {
             c = c->next;
         }
     } else {
+        XSetWindowBorderWidth(display,current->win,border_width);
         XMoveResizeWindow(display, current->win, 
-            0+border_width, ypos+border_width, 
-            screen_width-double_border_width, screen_height-double_border_width);
+            0, ypos, 
+            screen_width+BORDER_WIDTH, screen_height-ypos+BORDER_WIDTH);
         XMapWindow(display, current->win);
     }
 }
 
 void update_current() {
     if(head == NULL) return;
-    client *c = head; 
-    unsigned int border;
 
-    border = fullscreen ? 0 : border_width;
+    client *c = head;
     while(c != NULL) {
-        XSetWindowBorderWidth(display,c->win,border);
+        XSetWindowBorderWidth(display,c->win,border_width);
 
         if(c != current) {
             XSetWindowBorder(display,c->win,win_unfocus_colour);
@@ -473,18 +479,9 @@ void update_current() {
 }
 
 void toggle_panel() {
-    if(PANEL_HEIGHT > 0) {
-        if(panel_size > 0) {
-            screen_height += panel_size;
-            panel_size = 0;
-            showbar = 1;
-        } else {
-            panel_size = PANEL_HEIGHT;
-            screen_height -= panel_size;
-            showbar = 0;
-        }
-        tile();
-    }
+    showpanel = !showpanel;
+    tile();
+    save_desktop(current_desktop);
 }
 
 /* ********************** Keyboard Management ********************** */
@@ -540,12 +537,11 @@ void keypress(XEvent *e) {
 void configurerequest(XEvent *e) {
     XConfigureRequestEvent *ev = &e->xconfigurerequest;
     XWindowChanges wc;
-    unsigned int y = (TOP_PANEL == 0) ? panel_size:0;
 
     wc.x = ev->x;
-    wc.y = ev->y + y;
+    wc.y = ev->y + panel_size;
     wc.width = (ev->width < screen_width-border_width) ? ev->width:screen_width+border_width;
-    wc.height = (ev->height < screen_height-border_width-y) ? ev->height:screen_height+border_width;
+    wc.height = (ev->height < screen_height-border_width-panel_size) ? ev->height:screen_height+border_width;
     wc.border_width = 0;
     wc.sibling = ev->above;
     wc.stack_mode = ev->detail;
@@ -559,8 +555,6 @@ void maprequest(XEvent *e) {
     XGetWindowAttributes(display, ev->window, &attr);
     if(attr.override_redirect) return;
 
-    unsigned int y=0;
-    if(TOP_PANEL == 0) y = panel_size;
     // For fullscreen mplayer (and maybe some other program)
     client *c;
 
@@ -575,7 +569,7 @@ void maprequest(XEvent *e) {
     if (XGetTransientForHint(display, ev->window, &trans) && trans != None) {
         add_transient_window(ev->window); 
         if((attr.y + attr.height) > screen_height)
-            XMoveResizeWindow(display,ev->window,attr.x,y,attr.width,attr.height-10);
+            XMoveResizeWindow(display,ev->window,attr.x,panel_size,attr.width,attr.height-10);
         XSetWindowBorderWidth(display,ev->window,border_width);
         XSetWindowBorder(display,ev->window,win_focus_colour);
         XMapWindow(display, ev->window);
@@ -689,8 +683,6 @@ void motionnotify(XEvent *e) {
 }
 
 void buttonrelease(XEvent *e) {
-    XButtonEvent *ev = &e->xbutton;
-
     if(doresize < 1) {
         XSendEvent(display, PointerWindow, False, 0xfff, e);
         XFlush(display);
@@ -773,7 +765,7 @@ void setup() {
     panel_size = PANEL_HEIGHT;
     // Screen width and height
     screen_width = XDisplayWidth(display,screen) - border_width;
-    screen_height = XDisplayHeight(display,screen) - (panel_size+border_width);
+    screen_height = XDisplayHeight(display,screen) - border_width;
 
     char *loc;
     loc = setlocale(LC_ALL, "");
@@ -781,8 +773,8 @@ void setup() {
         logger("LOCALE FAILED");
 
     // For having the panel shown at startup or not
-    showbar = SHOW_BAR;
-    if(showbar != 0) toggle_panel();
+    showpanel = SHOW_PANEL;
+    if(showpanel) toggle_panel();
 
     // Colors
     win_focus_colour = getcolor(FOCUS);
@@ -794,7 +786,7 @@ void setup() {
     // Set up all desktop
     for(i=0;i<DESKTOPS;++i) {
         desktops[i].numwins = 0;
-        desktops[i].showbar = showbar;
+        desktops[i].showbar = showpanel;
         desktops[i].splitx = screen_width / 2;
         desktops[i].splity = screen_height / 2;
         desktops[i].head = NULL;
