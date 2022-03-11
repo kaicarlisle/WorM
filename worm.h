@@ -69,3 +69,4 @@ static void toggle_panel();
 static void unmapnotify(XEvent *e);    // Thunderbird's write window just unmaps...
 static void update_current();
 static void update_info();
+static void update_panel();

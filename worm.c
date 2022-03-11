@@ -53,11 +53,13 @@ static unsigned int panel_size, screen, border_width, win_focus_colour, win_unfo
 static unsigned int numwins, showpanel, splitx, splity, fullscreen;
 static int xerror(Display *dis, XErrorEvent *ee), (*xerrorxlib)(Display *, XErrorEvent *);
 unsigned int numlockmask;		/* dynamic key lock mask */
-static Window root;
+static Window root, panel_win;
 static client *head, *current, *transient_head;
 static XWindowAttributes attr;
 static XButtonEvent starter;
 static Atom *protocols, wm_delete_window, protos;
+static Drawable panel;
+static GC graphics_context;
 
 // Events array
 static void (*events[LASTEvent])(XEvent *e) = {
@@ -521,6 +523,12 @@ void toggle_panel() {
     save_desktop(current_desktop);
 }
 
+/* ********************** Panel Management ********************** */
+void update_panel() {
+    if(!showpanel) return;
+
+}
+
 /* ********************** Keyboard Management ********************** */
 void grabkeys() {
     unsigned int i,j;
@@ -836,6 +844,24 @@ void setup() {
     load_desktop(0);
     wm_delete_window = XInternAtom(display, "WM_DELETE_WINDOW", False);
     protos = XInternAtom(display, "WM_PROTOCOLS", False);
+
+    // create panel
+    XGCValues values;
+    values.background = FOCUS;
+    values.foreground = UNFOCUS;
+    values.line_width = 2;
+    values.line_style = LineSolid;
+    
+    graphics_context = XCreateGC(display, root, GCBackground|GCForeground|GCLineWidth|GCLineStyle, &values);
+    panel = XCreatePixmap(display, root, screen_width, panel_size, DefaultDepth(display, screen));
+    XFillRectangle(display, panel, graphics_context, 0, 0, screen_width, panel_size);
+    panel_win = XCreateSimpleWindow(display, root, 0, 0, screen_width, panel_size, 0, FOCUS, UNFOCUS);
+    attr.override_redirect = True;
+    XChangeWindowAttributes(display, panel_win, CWOverrideRedirect, &attr);
+    XSelectInput(display,panel_win,ExposureMask);
+    XSelectInput(display,root,PropertyChangeMask);
+    XMapWindow(display, panel_win);
+
     // To catch maprequest and destroynotify (if other wm running)
     XSelectInput(display,root,SubstructureNotifyMask|SubstructureRedirectMask);
     // For exiting
