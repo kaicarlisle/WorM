@@ -60,6 +60,7 @@ static void rotate_win_ver(const Arg arg);
 static void save_desktop(unsigned int i);
 static void load_desktop(unsigned int i);
 static void setup();
+static void setup_panel();
 static void sigchld(int unused);
 static void spawn(const Arg arg);
 static void start();

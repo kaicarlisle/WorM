@@ -529,6 +529,24 @@ void update_panel() {
 
 }
 
+void setup_panel() {
+    XGCValues values;
+    values.background = getcolor(UNFOCUS);
+    values.foreground = BlackPixel(display, root);
+    values.line_width = 3;
+    values.line_style = LineSolid;
+    graphics_context = XCreateGC(display, root, GCBackground|GCForeground|GCLineWidth|GCLineStyle, &values);
+
+    char *msg = "Hello World";
+    
+    panel_win = XCreateSimpleWindow(display, root, 0, 0, screen_width+BORDER_WIDTH, panel_size, 1, getcolor(PANEL_COLOUR), getcolor(UNFOCUS));
+    XSelectInput(display, panel_win, ExposureMask | KeyPressMask);
+    XMapWindow(display, panel_win);
+
+    XFillRectangle(display, panel_win, graphics_context, 0, 0, screen_width+BORDER_WIDTH, panel_size);
+    XDrawString(display, panel_win, graphics_context, 2, 2, msg, strlen(msg));
+}
+
 /* ********************** Keyboard Management ********************** */
 void grabkeys() {
     unsigned int i,j;
@@ -846,21 +864,7 @@ void setup() {
     protos = XInternAtom(display, "WM_PROTOCOLS", False);
 
     // create panel
-    XGCValues values;
-    values.background = FOCUS;
-    values.foreground = UNFOCUS;
-    values.line_width = 2;
-    values.line_style = LineSolid;
-    
-    graphics_context = XCreateGC(display, root, GCBackground|GCForeground|GCLineWidth|GCLineStyle, &values);
-    panel = XCreatePixmap(display, root, screen_width, panel_size, DefaultDepth(display, screen));
-    XFillRectangle(display, panel, graphics_context, 0, 0, screen_width, panel_size);
-    panel_win = XCreateSimpleWindow(display, root, 0, 0, screen_width, panel_size, 0, FOCUS, UNFOCUS);
-    attr.override_redirect = True;
-    XChangeWindowAttributes(display, panel_win, CWOverrideRedirect, &attr);
-    XSelectInput(display,panel_win,ExposureMask);
-    XSelectInput(display,root,PropertyChangeMask);
-    XMapWindow(display, panel_win);
+    setup_panel();
 
     // To catch maprequest and destroynotify (if other wm running)
     XSelectInput(display,root,SubstructureNotifyMask|SubstructureRedirectMask);

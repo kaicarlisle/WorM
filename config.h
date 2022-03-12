@@ -6,7 +6,7 @@
 #define DESKTOPS        10  /* Must edit DESKTOPCHANGE keys to suit */
 #define MOD1            Mod4Mask  /* windows key */
 #define MOD4            Mod1Mask  /* alt key */
-#define OUTPUT_INFO     0  /* 0=Don't 1=Output info (for bipolarbar) */
+#define OUTPUT_INFO     0  /* 0=Don't 1=Output info*/
 #define PANEL_HEIGHT    30
 #define SHOW_PANEL      0  /* 0=Don't 1=Have the panel shown at startup */
 #define BORDER_WIDTH    3
@@ -15,6 +15,7 @@
 /* Colors */
 #define FOCUS           "#664422" // dkorange
 #define UNFOCUS         "#004050" // blueish
+#define PANEL_COLOUR    "#72a1ad" // light blueish
 
 const char* dmenucmd[]         = {"dmenu_run","-i","-nb","#664422","-nf","white",NULL};
 const char* terminalcmd[]      = {"alacritty",NULL};
