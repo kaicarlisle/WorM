@@ -368,22 +368,18 @@ void center_split() {
 // }
 
 void move_to_desktop(const Arg arg) {
-    // Sends the current window to the specified diesktop
-    // If the specified desktop is full, go to the next one with space
-    // basically call add_window on that one, with the window provided?
     Window temp = current->win;
-    unsigned int temp_desktop = current_desktop;
 
-    // add the new window
-    load_desktop(arg.i);
-    add_window(temp);
-
-    // remove the window from the original desktop
-    load_desktop(temp_desktop);
+    // remove the window
     remove_window(current->win, 0, 0);
+    tile();
+    save_desktop(current_desktop);
 
-    // change to the new desktop
+    // add the new window to the new desktop
     change_desktop(arg);
+    add_window(temp);
+    tile();
+    update_current();
 }
 
 /* **************************** Desktop Management ************************************* */
