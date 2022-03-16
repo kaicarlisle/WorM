@@ -54,7 +54,7 @@ static unsigned int numwins, showpanel, splitx, splity, fullscreen;
 static int xerror(Display *dis, XErrorEvent *ee), (*xerrorxlib)(Display *, XErrorEvent *);
 unsigned int numlockmask;		/* dynamic key lock mask */
 static Window root;
-static client *head, *current, *transient_head;
+static client *head, *current, *transient_head, *swap_from, *swap_to;
 static XWindowAttributes attr;
 static XButtonEvent starter;
 static Atom *protocols, wm_delete_window, protos;
@@ -334,9 +334,57 @@ void center_split() {
     save_desktop(current_desktop);
 }
 
-// void move_swap_hor(const Arg arg){}
+// void perform_swap() {
+//     // TODO: Allow swapping between desktops
+//     // TODO: Allow swapping onto a blank desktop
+//     if(swap_from == swap_to) return;
 
-// void move_swap_ver(const Arg arg) {}
+//     Window temp;
+//     temp = swap_from->win;
+//     swap_from->win = swap_to->win;
+//     swap_to->win = temp;
+
+//     swap_from = NULL;
+//     swap_to = NULL;
+
+//     save_desktop(current_desktop);
+//     tile();
+//     update_current();
+// }
+
+// These should update the pointers swap_from/to and desktop_swap_from/to
+// void move_swap_hor(const Arg arg){
+//     if(swap_from == NULL) {
+//         swap_from = current;
+//         swap_to = current;
+//     }
+// }
+
+// void move_swap_ver(const Arg arg) {
+//     if(swap_from == NULL) {
+//         swap_from = current;
+//         swap_to = current;
+//     }
+// }
+
+void move_to_desktop(const Arg arg) {
+    // Sends the current window to the specified diesktop
+    // If the specified desktop is full, go to the next one with space
+    // basically call add_window on that one, with the window provided?
+    Window temp = current->win;
+    unsigned int temp_desktop = current_desktop;
+
+    // add the new window
+    load_desktop(arg.i);
+    add_window(temp);
+
+    // remove the window from the original desktop
+    load_desktop(temp_desktop);
+    remove_window(current->win, 0, 0);
+
+    // change to the new desktop
+    change_desktop(arg);
+}
 
 /* **************************** Desktop Management ************************************* */
 void update_info() {
@@ -833,6 +881,8 @@ void setup() {
 
     // Select first desktop by default
     previous_desktop = 0;
+    swap_from = NULL;
+    swap_to = NULL;
     load_desktop(0);
     wm_delete_window = XInternAtom(display, "WM_DELETE_WINDOW", False);
     protos = XInternAtom(display, "WM_PROTOCOLS", False);

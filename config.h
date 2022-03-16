@@ -6,7 +6,7 @@
 #define DESKTOPS        10  /* Must edit DESKTOPCHANGE keys to suit */
 #define MOD1            Mod4Mask  /* windows key */
 #define MOD4            Mod1Mask  /* alt key */
-#define OUTPUT_INFO     0  /* 0=Don't 1=Output info (for bipolarbar) */
+#define OUTPUT_INFO     1  /* 0=Don't 1=Output info (for bipolarbar) */
 #define PANEL_HEIGHT    30
 #define SHOW_PANEL      0  /* 0=Don't 1=Have the panel shown at startup */
 #define BORDER_WIDTH    3
@@ -21,7 +21,7 @@ const char* terminalcmd[]      = {"alacritty",NULL};
 
 #define DESKTOPCHANGE(K,N) \
     {  MOD1,             K,        change_desktop, {.i = N}}, \
-    // {  MOD1|ShiftMask,   K,        move_swap_to_desktop, {.i = N}},
+    {  MOD1|ShiftMask,   K,        move_to_desktop, {.i = N}},
 
 static key keys[] = {
     /* MOD               KEY            FUNCTION           ARGS */
