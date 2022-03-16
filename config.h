@@ -6,7 +6,7 @@
 #define DESKTOPS        10  /* Must edit DESKTOPCHANGE keys to suit */
 #define MOD4            Mod4Mask  /* windows key */
 #define MOD1            Mod1Mask  /* alt key */
-#define OUTPUT_INFO     1  /* 0=Don't 1=Output info (for bipolarbar) */
+#define OUTPUT_INFO     0  /* 0=Don't 1=Output info (for bipolarbar) */
 #define PANEL_HEIGHT    30
 #define SHOW_PANEL      0  /* 0=Don't 1=Have the panel shown at startup */
 #define BORDER_WIDTH    3
@@ -15,6 +15,7 @@
 /* Colors */
 #define FOCUS           "#664422" // dkorange
 #define UNFOCUS         "#004050" // blueish
+#define SWAP_COLOUR     "#CF420A" // red/orangeish
 
 const char* dmenucmd[]         = {"dmenu_run","-i","-nb","#664422","-nf","white",NULL};
 const char* terminalcmd[]      = {"alacritty",NULL};
@@ -31,10 +32,11 @@ static key keys[] = {
     {  MOD4,             XK_Up,         rotate_win_ver,    {.i = -1}},
     {  MOD4,             XK_Down,       rotate_win_ver,    {.i = 1}},
     {  MOD4,             XK_f,          toggle_fullscreen, {NULL}},
-    // {  MOD4|ShiftMask,   XK_Left,       move_swap_hor,     {.i = -1}},
-    // {  MOD4|ShiftMask,   XK_Right,      move_swap_hor,     {.i = 1}},
-    // {  MOD4|ShiftMask,   XK_Up,         move_swap_ver,     {.i = -1}},
-    // {  MOD4|ShiftMask,   XK_Down,       move_swap_ver,     {.i = 1}},
+    {  MOD4|ShiftMask,   XK_Left,       move_swap_hor,     {.i = -1}},
+    {  MOD4|ShiftMask,   XK_Right,      move_swap_hor,     {.i = 1}},
+    {  MOD4|ShiftMask,   XK_Up,         move_swap_ver,     {.i = -1}},
+    {  MOD4|ShiftMask,   XK_Down,       move_swap_ver,     {.i = 1}},
+    {  MOD4|ShiftMask,   XK_Return,     perform_swap,      {NULL}},
     {  MOD4|MOD1,        XK_Left,       move_split_hor,    {.i = -10}},
     {  MOD4|MOD1,        XK_Right,      move_split_hor,    {.i = 10}},
     {  MOD4|MOD1,        XK_Up,         move_split_ver,    {.i = -10}},
