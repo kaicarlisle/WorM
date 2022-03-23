@@ -49,12 +49,12 @@
 static Display *display;
 static unsigned int bool_quit, current_desktop, previous_desktop, doresize;
 static int screen_height, screen_width;
-static unsigned int panel_size, screen, border_width, win_focus_colour, win_unfocus_colour;
+static unsigned int panel_size, screen, border_width, win_focus_colour, win_unfocus_colour, win_swap_colour;
 static unsigned int numwins, showpanel, splitx, splity, fullscreen;
 static int xerror(Display *dis, XErrorEvent *ee), (*xerrorxlib)(Display *, XErrorEvent *);
 unsigned int numlockmask;		/* dynamic key lock mask */
 static Window root, panel_win;
-static client *head, *current, *transient_head;
+static client *head, *current, *transient_head, *swap_from, *swap_to;
 static XWindowAttributes attr;
 static XButtonEvent starter;
 static Atom *protocols, wm_delete_window, protos;
@@ -336,9 +336,119 @@ void center_split() {
     save_desktop(current_desktop);
 }
 
-// void move_swap_hor(const Arg arg){}
+void enter_swap() {
+    swap_from = current;
+    swap_to = current;
+    draw_swap_borders();
+}
 
-// void move_swap_ver(const Arg arg) {}
+void draw_swap_borders() {
+    update_current();
+    // draw SWAP_COLOR border around the swap_from/to clients
+    client *c = head;
+    for(c=head;c;c=c->next) {
+        if(c == swap_to) {
+            XSetWindowBorder(display,c->win,win_swap_colour);
+            XRaiseWindow(display,c->win);
+        }
+    }
+}
+
+void perform_swap() {
+    if(swap_from == swap_to) return;
+
+    Window temp;
+    temp = swap_from->win;
+    swap_from->win = swap_to->win;
+    swap_to->win = temp;
+
+    swap_from = NULL;
+    swap_to = NULL;
+
+    save_desktop(current_desktop);
+    update_current();
+    tile();
+}
+
+void move_swap_hor(const Arg arg){
+    if(swap_from == NULL) enter_swap();
+
+    switch(numwins) {
+        case 1:
+            break;
+        case 2:
+            if(arg.i == 1 && swap_to == head) {
+                swap_to = swap_to->next;
+            } else if(arg.i == -1 && swap_to == head->next) {
+                swap_to = head;
+            }
+            break;
+        case 3:
+            if(arg.i == 1 && swap_to == head) {
+                swap_to = swap_to->next;
+            } else if(arg.i == -1 && (swap_to == head->next || swap_to == head->next->next)) {
+                swap_to = head;
+            }
+            break;
+        case 4:
+            if(arg.i == 1 && swap_to == head) {
+                swap_to = swap_to->next;
+            } else if(arg.i == -1 && swap_to == head->next) {
+                swap_to = head;
+            } else if(arg.i == 1 && swap_to == head->next->next->next) {
+                swap_to = swap_to->prev;
+            } else if(arg.i == -1 && swap_to == head->next->next) {
+                swap_to = swap_to->next;
+            }
+            break;
+    }
+    draw_swap_borders();
+}
+
+void move_swap_ver(const Arg arg) {
+    if(swap_from == NULL) enter_swap();
+
+    switch(numwins) {
+        case 1:
+            return;
+        case 2:
+            return;
+        case 3:
+            if(arg.i == -1 && swap_to == head->next->next) {
+                swap_to = swap_to->prev;
+            } else if(arg.i == 1 && swap_to == head->next) {
+                swap_to = swap_to->next;
+            }
+            break;
+        case 4:
+            if(arg.i == -1 && swap_to == head->next->next) {
+                swap_to = swap_to->prev;
+            } else if(arg.i == 1 && swap_to == head->next) {
+                swap_to = swap_to->next;
+            } else if(arg.i == -1 && swap_to == head->next->next->next) {
+                swap_to = head;
+            } else if(arg.i == 1 && swap_to == head) {
+                swap_to = head->next->next->next;
+            }
+            break;
+    }
+    draw_swap_borders();
+}
+
+void move_to_desktop(const Arg arg) {
+    Window temp = current->win;
+
+    // remove the window
+    remove_window(current->win, 0, 0);
+    tile();
+    save_desktop(current_desktop);
+
+    // add the new window to the new desktop
+    change_desktop(arg);
+    add_window(temp);
+    tile();
+    update_current();
+}
 
 /* **************************** Desktop Management ************************************* */
 void update_info() {
@@ -842,6 +952,7 @@ void setup() {
     // Colors
     win_focus_colour = getcolor(FOCUS);
     win_unfocus_colour = getcolor(UNFOCUS);
+    win_swap_colour = getcolor(SWAP_COLOUR);
 
     // Shortcuts
     grabkeys();
@@ -859,6 +970,8 @@ void setup() {
 
     // Select first desktop by default
     previous_desktop = 0;
+    swap_from = NULL;
+    swap_to = NULL;
     load_desktop(0);
     wm_delete_window = XInternAtom(display, "WM_DELETE_WINDOW", False);
     protos = XInternAtom(display, "WM_PROTOCOLS", False);
