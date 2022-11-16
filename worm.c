@@ -360,6 +360,8 @@ void perform_swap() {
     swap_from->win = swap_to->win;
     swap_to->win = temp;
 
+    current = swap_to;
+
     swap_from = NULL;
     swap_to = NULL;
 
