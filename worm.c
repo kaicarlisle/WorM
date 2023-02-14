@@ -107,6 +107,8 @@ void add_window(Window w) {
     
     current = c;
     numwins += 1;
+
+    update_fullscreen();
     save_desktop(current_desktop);
 }
 
@@ -189,6 +191,8 @@ void remove_window(Window w, unsigned int dr, unsigned int transient_window) {
     if(numwins == 0) {
         last_desktop();
     }
+
+    update_fullscreen();
 }
 
 void rotate_win_hor(const Arg arg) {
@@ -305,7 +309,11 @@ void rotate_win_ver(const Arg arg) {
 
 void toggle_fullscreen() {
     fullscreen = !fullscreen;
-    if(fullscreen) {
+    update_fullscreen();
+}
+
+void update_fullscreen() {
+    if(fullscreen || numwins == 1) {
         border_width = 0;
     } else {
         border_width = BORDER_WIDTH;

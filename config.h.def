@@ -19,6 +19,7 @@
 
 const char* dmenucmd[]         = {"dmenu_run","-i","-nb","#664422","-nf","white",NULL};
 const char* terminalcmd[]      = {"alacritty",NULL};
+const char* browsercmd[]       = {"firefox",NULL};
 
 #define DESKTOPCHANGE(K,N) \
     {  MOD4,             K,        change_desktop, {.i = N}}, \

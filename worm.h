@@ -68,6 +68,7 @@ static void spawn(const Arg arg);
 static void start();
 static void tile();
 static void toggle_fullscreen();
+static void update_fullscreen();
 static void toggle_panel();
 static void unmapnotify(XEvent *e);    // Thunderbird's write window just unmaps...
 static void update_current();
