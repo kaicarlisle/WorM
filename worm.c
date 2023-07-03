@@ -549,7 +549,7 @@ void tile() {
             case 1:
                 XMoveResizeWindow(display, head->win, 
                     0, ypos, 
-                    screen_width-border_width, screen_height-ypos-border_width);
+                    screen_width+BORDER_WIDTH, screen_height-ypos+BORDER_WIDTH);
                 break;
             case 2:
                 XMoveResizeWindow(display, head->win, 
